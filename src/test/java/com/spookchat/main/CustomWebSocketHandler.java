@@ -1,4 +1,4 @@
-package com.example.demo;
+package com.spookchat.main;
 
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.TextMessage;
