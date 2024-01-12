@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>SpookChat</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f2f2f2;
+        }
+
+        .container {
+            width: 300px;
+            margin: 20px auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #chat-box {
+            width: 300px;
+            height: 400px;
+            overflow-y: scroll;
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin: 20px auto;
+            background-color: #fff;
+        }
+
+        #message-input {
+            width: 230px;
+            padding: 5px;
+            margin-right: 5px;
+        }
+
+        #send-btn {
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="chat-box"></div>
+    <div>
+        <div class="container">
+            <input type="text" id="message-input" placeholder="Type a message...">
+            <button id="send-btn" onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+    <script>
+        const chatBox = document.getElementById('chat-box');
+        const messageInput = document.getElementById('message-input');
+        let socket = new WebSocket("ws://localhost:8080/websocket-endpoint");
+        messageInput.addEventListener('keyup', function (event) {
+            if (event.keyCode === 13) {
+                event.preventDefault();
+                sendMessage();
+            }
+        });
+        socket.onopen = function (event) {
+            appendMessage("Connected to SpookChat", true);
+        };
+
+        socket.onmessage = function (event) {
+            appendMessage(event.data, true);
+        };
+
+        socket.onclose = function (event) {
+            appendMessage("Connection closed", true);
+        };
+
+        function sendMessage() {
+            const message = messageInput.value;
+            if (message.trim() !== '') {
+                socket.send(message);
+                appendMessage(message, false);
+                messageInput.value = '';
+            }
+        }
+
+        function appendMessage(message, server) {
+            const messageElement = document.createElement('div');
+            const labelElement = document.createElement('div');
+            let actualMessage = message;
+            messageElement.style.borderRadius = "5px";
+            messageElement.style.padding = "5px";
+            messageElement.style.width = "fit-content";
+            messageElement.style.marginBottom = "5px";
+            if (server) {
+                labelElement.textContent = "SpookChat";
+                labelElement.style.fontWeight = "bold";
+                actualMessage = message.replace("SpookChat: ", "");
+                messageElement.style.backgroundColor = "#ccc";
+                messageElement.style.color = "#000";
+                messageElement.style.textAlign = "left";
+                messageElement.style.marginRight = "auto";
+                let i = 0;
+                function typeWriter() {
+                    if (i < actualMessage.length) {
+                        messageElement.textContent += actualMessage.charAt(i);
+                        i++;
+                        setTimeout(typeWriter, 50);
+                    }
+                }
+                typeWriter();
+            }
+            else {
+                labelElement.textContent = "You";
+                labelElement.style.fontWeight = "bold";
+                labelElement.style.textAlign = "right";
+                actualMessage = message.replace("You: ", "");
+                messageElement.style.backgroundColor = "#2196F3";
+                messageElement.style.color = "#fff";
+                messageElement.style.borderRadius = "5px";
+                messageElement.style.textAlign = "right";
+                messageElement.style.marginLeft = "auto";
+                messageElement.textContent = actualMessage;
+            }
+            chatBox.appendChild(labelElement);
+            chatBox.appendChild(messageElement);
+
+
+        }
+    </script>
+</body>
+
+</html>
